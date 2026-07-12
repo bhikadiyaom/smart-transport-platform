@@ -131,8 +131,8 @@ const triggerExpiryReminders = async (req, res) => {
       const expiry = new Date(driver.license_expiry);
       const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
       
-      // Expiring within 30 days, or already expired (within last 7 days for warnings)
-      if (daysLeft > -7 && daysLeft <= 30) {
+      // Expiring within 7 days, or already expired (within last 7 days for warnings)
+      if (daysLeft > -7 && daysLeft <= 7) {
         try {
           const result = await sendExpiryReminder(driver, daysLeft);
           sentReminders.push({

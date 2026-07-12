@@ -50,13 +50,17 @@ const seed = async () => {
     const pastExpiry = new Date();
     pastExpiry.setFullYear(pastExpiry.getFullYear() - 1);
 
+    const expiringExpiry = new Date();
+    expiringExpiry.setDate(expiringExpiry.getDate() + 5); // expires in 5 days
+
     const drivers = await Driver.insertMany([
       { name: 'Alex Kumar', email: 'alex@transitops.com', license_no: 'DL-MH-09-2019-001234', license_category: 'LMV', license_expiry: futureExpiry, contact: '9876543210', safety_score: 94, trip_completion_pct: 98, status: 'available' },
       { name: 'Rajan Singh', email: 'rajan@transitops.com', license_no: 'DL-UP-35-2020-005678', license_category: 'HMV', license_expiry: futureExpiry, contact: '9876543211', safety_score: 87, trip_completion_pct: 92, status: 'on_trip' },
       { name: 'Priya Patel', email: 'priya@transitops.com', license_no: 'DL-GJ-08-2018-009012', license_category: 'LMV', license_expiry: futureExpiry, contact: '9876543212', safety_score: 96, trip_completion_pct: 100, status: 'available' },
       { name: 'Mohammed Ali', email: 'ali@transitops.com', license_no: 'DL-TN-22-2021-003456', license_category: 'HMV', license_expiry: futureExpiry, contact: '9876543213', safety_score: 79, trip_completion_pct: 85, status: 'available' },
       { name: 'Suresh Yadav', email: 'suresh@transitops.com', license_no: 'DL-RJ-06-2017-007890', license_category: 'LMV', license_expiry: pastExpiry, contact: '9876543214', safety_score: 72, trip_completion_pct: 78, status: 'off_duty' },
-      { name: 'Kavita Reddy', email: 'kavita@transitops.com', license_no: 'DL-AP-10-2022-001111', license_category: 'LMV', license_expiry: futureExpiry, contact: '9876543215', safety_score: 88, trip_completion_pct: 94, status: 'suspended' }
+      { name: 'Kavita Reddy', email: 'kavita@transitops.com', license_no: 'DL-AP-10-2022-001111', license_category: 'LMV', license_expiry: futureExpiry, contact: '9876543215', safety_score: 88, trip_completion_pct: 94, status: 'suspended' },
+      { name: 'Karan Patel (Expiring soon)', email: 'karan@transitops.com', license_no: 'DL-GJ-03-2021-007788', license_category: 'LMV', license_expiry: expiringExpiry, contact: '9876543216', safety_score: 91, trip_completion_pct: 95, status: 'available' }
     ]);
     console.log(`✅ Created ${drivers.length} drivers`);
 
