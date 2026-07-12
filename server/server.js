@@ -21,7 +21,9 @@ const authLimiter = rateLimit({
   message: { message: 'Too many requests from this IP — try again in 15 minutes.' }
 });
 
-// ─── Routes ───────────────────────────────────────────────────────────────────
+// Health check
+app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
+
 app.use('/api/auth', authLimiter, require('./routes/auth'));
 app.use('/api/vehicles', require('./routes/vehicles'));
 app.use('/api/drivers', require('./routes/drivers'));
@@ -29,9 +31,6 @@ app.use('/api/trips', require('./routes/trips'));
 app.use('/api/maintenance', require('./routes/maintenance'));
 app.use('/api/finance', require('./routes/fuel'));
 app.use('/api', require('./routes/analytics'));
-
-// Health check
-app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
 
 // 404 handler
 app.use((req, res) => res.status(404).json({ message: `Route ${req.method} ${req.path} not found.` }));
