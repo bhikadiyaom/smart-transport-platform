@@ -5,12 +5,13 @@ import { authAPI } from '../api';
 import { Zap, Eye, EyeOff, AlertCircle } from 'lucide-react';
 
 export default function Login() {
-  const [form, setForm] = useState({ email: '', password: '', rememberMe: false });
+  const [form, setForm]         = useState({ email: '', password: '', rememberMe: false });
   const [showPass, setShowPass] = useState(false);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [error, setError]       = useState('');
+  const [loading, setLoading]   = useState(false);
+  const [shaking, setShaking]   = useState(false);
   const { login } = useAuth();
-  const navigate = useNavigate();
+  const navigate  = useNavigate();
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -18,10 +19,16 @@ export default function Login() {
     if (error) setError('');
   };
 
+  const triggerShake = () => {
+    setShaking(true);
+    setTimeout(() => setShaking(false), 520);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.email || !form.password) {
       setError('Email and password are required.');
+      triggerShake();
       return;
     }
     setLoading(true);
@@ -30,27 +37,29 @@ export default function Login() {
       login(res.data.user, res.data.token, form.rememberMe);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed — please try again.');
+      const msg = err.response?.data?.message || 'Login failed — please try again.';
+      setError(msg);
+      triggerShake();
     } finally {
       setLoading(false);
     }
   };
 
-  // Demo accounts for dropdown
   const demoAccounts = [
-    { label: 'PRINCE (Fleet Manager)', email: 'd24it149@charusat.edu.in' },
-    { label: 'Fleet Manager Mike', email: 'fleet@transitops.com' },
-    { label: 'Dispatcher Dave', email: 'dispatch@transitops.com' },
-    { label: 'Safety Officer Sara', email: 'safety@transitops.com' },
-    { label: 'Financial Analyst Fiona', email: 'finance@transitops.com' },
+    { label: 'PRINCE (Fleet Manager)',    email: 'd24it149@charusat.edu.in' },
+    { label: 'Fleet Manager Mike',         email: 'fleet@transitops.com' },
+    { label: 'Dispatcher Dave',            email: 'dispatch@transitops.com' },
+    { label: 'Safety Officer Sara',        email: 'safety@transitops.com' },
+    { label: 'Financial Analyst Fiona',    email: 'finance@transitops.com' },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-      {/* Background gradient */}
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Ambient background */}
       <div className="absolute inset-0 bg-gradient-to-br from-primary-900/20 via-slate-950 to-slate-950 pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-primary-600/5 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="relative w-full max-w-md">
+      <div className={`relative w-full max-w-md login-card-enter ${shaking ? 'form-shake' : ''}`}>
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-primary-600 rounded-2xl mb-4 shadow-lg shadow-primary-900/50">
@@ -124,7 +133,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPass(v => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
                 >
                   {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -142,7 +151,9 @@ export default function Login() {
                 />
                 <span className="text-sm text-slate-400">Remember me for 7 days</span>
               </label>
-              <span className="text-sm text-primary-400 cursor-pointer hover:text-primary-300">Forgot password?</span>
+              <span className="text-sm text-primary-400 cursor-pointer hover:text-primary-300 transition-colors">
+                Forgot password?
+              </span>
             </div>
 
             <button
@@ -150,7 +161,12 @@ export default function Login() {
               disabled={loading}
               className="btn-primary w-full justify-center py-3 text-base"
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? (
+                <>
+                  <span className="spinner" />
+                  Signing in…
+                </>
+              ) : 'Sign in'}
             </button>
           </form>
         </div>
