@@ -1,8 +1,9 @@
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
   LayoutDashboard, Truck, Users, MapPin, Wrench,
-  Fuel, BarChart3, Settings, LogOut, Zap
+  Fuel, BarChart3, Settings, LogOut, Zap, Sun, Moon
 } from 'lucide-react';
 
 const navItems = [
@@ -33,6 +34,21 @@ const roleLabels = {
 export default function Sidebar() {
   const { user, logout, can } = useAuth();
   const navigate = useNavigate();
+
+  const [theme, setTheme] = useState(() => {
+    return document.documentElement.classList.contains('light') ? 'light' : 'dark';
+  });
+
+  const toggleTheme = () => {
+    const nextTheme = theme === 'light' ? 'dark' : 'light';
+    if (nextTheme === 'light') {
+      document.documentElement.classList.add('light');
+    } else {
+      document.documentElement.classList.remove('light');
+    }
+    localStorage.setItem('theme', nextTheme);
+    setTheme(nextTheme);
+  };
 
   const handleLogout = () => {
     logout();
@@ -88,6 +104,25 @@ export default function Sidebar() {
             </span>
           </div>
         </div>
+        
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          className="w-full flex items-center gap-2 text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/80 px-3 py-2 rounded-lg transition-all duration-200 mb-2"
+        >
+          {theme === 'light' ? (
+            <>
+              <Moon className="w-4 h-4" />
+              <span>Dark Theme</span>
+            </>
+          ) : (
+            <>
+              <Sun className="w-4 h-4" />
+              <span>Light Theme</span>
+            </>
+          )}
+        </button>
+
         <button
           onClick={handleLogout}
           className="w-full flex items-center gap-2 text-sm text-slate-400 hover:text-rose-400 hover:bg-rose-900/20 px-3 py-2 rounded-lg transition-all duration-200"
