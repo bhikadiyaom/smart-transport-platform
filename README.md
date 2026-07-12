@@ -4,17 +4,6 @@ TransitOps is a modern, high-fidelity enterprise fleet and transit management sy
 
 ---
 
-## 🎨 Premium Visual Identity & UI/UX Design
-
-TransitOps has been fully redesigned to feature a cutting-edge **Glassmorphic interface** providing deep visual polish:
-- **Frosted Glass Cards (`backdrop-filter`)**: Containers render with custom `rgba` transparency, saturated blur filters, and thin high-contrast borders for an ultra-premium layout.
-- **Dynamic Background Mesh**: Moving radial gradients (indigo, violet, blue) float in the background and shine through transparent overlay panels.
-- **Vibrant Status Badge System**: Availability states (Available, On Trip, In Shop, Retired, Suspended) are rendered as rounded pills with color-matched breathing pulse indicator dots.
-- **Smooth Animations**: Interactivity is heightened with page transitions, count-up metric numbers, card-hover lift effects, form shake alerts, and staggered element entrances.
-- **Skeleton Shimmer Loaders**: Data-heavy tables and grids render placeholder skeleton states during API fetches to prevent sudden layout shifts.
-
----
-
 ## 🛠️ Technology Stack
 
 - **Frontend**: React 18, Tailwind CSS v3, React Router v6, Lucide React (Icons), Recharts (Visual Data Charts), React Hot Toast.
