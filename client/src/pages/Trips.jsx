@@ -78,7 +78,7 @@ export default function Trips() {
   const [completingTrip, setCompletingTrip] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [completeForm, setCompleteForm] = useState({ final_odometer: '', fuel_consumed: '', fuel_cost: '', revenue: '' });
-  const [formError, setFormError] = useState('');
+  const [errors, setErrors] = useState({});
   const [completeError, setCompleteError] = useState('');
   const [saving, setSaving] = useState(false);
   const [cancelTarget, setCancelTarget] = useState(null);
@@ -90,14 +90,19 @@ export default function Trips() {
   const load = async () => {
     setLoading(true);
     try {
-      const [tripRes, vehRes, drvRes] = await Promise.all([
-        tripsAPI.getAll({ status: statusFilter }),
-        vehiclesAPI.getAvailable(),
-        driversAPI.getAvailable()
-      ]);
-      setTrips(tripRes.data);
-      setVehicles(vehRes.data);
-      setDrivers(drvRes.data);
+      if (canEdit) {
+        const [tripRes, vehRes, drvRes] = await Promise.all([
+          tripsAPI.getAll({ status: statusFilter }),
+          vehiclesAPI.getAvailable(),
+          driversAPI.getAvailable()
+        ]);
+        setTrips(tripRes.data);
+        setVehicles(vehRes.data);
+        setDrivers(drvRes.data);
+      } else {
+        const tripRes = await tripsAPI.getAll({ status: statusFilter });
+        setTrips(tripRes.data);
+      }
     } catch (e) { toast.error('Failed to load trips.'); }
     finally { setLoading(false); }
   };
@@ -105,19 +110,39 @@ export default function Trips() {
   useEffect(() => { load(); }, [statusFilter]);
 
   const handleCreate = async () => {
-    if (!form.source || !form.destination || !form.vehicle_id || !form.driver_id || !form.cargo_weight_kg) {
-      setFormError('All fields except notes and revenue are required.'); return;
-    }
+    const newErrors = {};
+    if (!form.source?.trim()) newErrors.source = 'Origin / Source is required.';
+    if (!form.destination?.trim()) newErrors.destination = 'Destination is required.';
+    if (!form.vehicle_id) newErrors.vehicle_id = 'Vehicle assignment is required.';
+    if (!form.driver_id) newErrors.driver_id = 'Driver assignment is required.';
+
+    const cargo = Number(form.cargo_weight_kg);
+    if (form.cargo_weight_kg === '' || isNaN(cargo)) newErrors.cargo_weight_kg = 'Cargo weight is required.';
+    else if (cargo <= 0) newErrors.cargo_weight_kg = 'Cargo weight must be greater than zero.';
+
+    const dist = Number(form.planned_distance_km);
+    if (form.planned_distance_km === '' || isNaN(dist)) newErrors.planned_distance_km = 'Planned distance is required.';
+    else if (dist < 0) newErrors.planned_distance_km = 'Planned distance cannot be negative.';
+
+    const rev = Number(form.revenue);
+    if (form.revenue !== '' && (isNaN(rev) || rev < 0)) newErrors.revenue = 'Revenue cannot be negative.';
+
     if (capacityExceeded) {
-      setFormError(`Capacity exceeded by ${cargoNum - selectedVehicle.max_capacity_kg} kg — select a larger vehicle or reduce cargo weight.`); return;
+      newErrors.cargo_weight_kg = `Cargo weight exceeds vehicle capacity of ${selectedVehicle.max_capacity_kg} kg.`;
     }
-    setSaving(true); setFormError('');
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setSaving(true); setErrors({});
     try {
       await tripsAPI.create({ ...form, cargo_weight_kg: Number(form.cargo_weight_kg), planned_distance_km: Number(form.planned_distance_km) || 0, revenue: Number(form.revenue) || 0 });
       toast.success('Trip created as draft.');
       setCreateOpen(false); setForm(emptyForm); load();
     } catch (err) {
-      setFormError(err.response?.data?.message || 'Failed to create trip.');
+      setErrors({ global: err.response?.data?.message || 'Failed to create trip.' });
     } finally { setSaving(false); }
   };
 
@@ -179,7 +204,7 @@ export default function Trips() {
         <div className="flex gap-2">
           <CSVExportButton data={csvData} filename="trips" />
           {canEdit && (
-            <button className="btn-primary" onClick={() => { setCreateOpen(true); setForm(emptyForm); setFormError(''); }}>
+            <button className="btn-primary" onClick={() => { setCreateOpen(true); setForm(emptyForm); setErrors({}); }}>
               <Plus className="w-4 h-4" /> Create Trip
             </button>
           )}
@@ -262,17 +287,19 @@ export default function Trips() {
       {/* Create Trip Modal */}
       <Modal isOpen={createOpen} onClose={() => setCreateOpen(false)} title="Create New Trip" size="lg">
         <div className="space-y-4">
-          <ErrorCallout message={formError} />
+          <ErrorCallout message={errors.global} />
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="label">Origin / Source *</label>
               <input className="input" placeholder="Mumbai Warehouse" value={form.source}
                 onChange={e => setForm(f => ({ ...f, source: e.target.value }))} />
+              {errors.source && <p className="text-rose-400 text-xs mt-1">{errors.source}</p>}
             </div>
             <div>
               <label className="label">Destination *</label>
               <input className="input" placeholder="Pune Distribution Centre" value={form.destination}
                 onChange={e => setForm(f => ({ ...f, destination: e.target.value }))} />
+              {errors.destination && <p className="text-rose-400 text-xs mt-1">{errors.destination}</p>}
             </div>
             <div>
               <label className="label">Vehicle * (available only)</label>
@@ -285,6 +312,7 @@ export default function Trips() {
                   </option>
                 ))}
               </select>
+              {errors.vehicle_id && <p className="text-rose-400 text-xs mt-1">{errors.vehicle_id}</p>}
               {vehicles.length === 0 && <p className="text-xs text-amber-400 mt-1">No available vehicles right now.</p>}
             </div>
             <div>
@@ -294,22 +322,26 @@ export default function Trips() {
                 <option value="">Select driver…</option>
                 {drivers.map(d => <option key={d._id} value={d._id}>{d.name} — {d.license_no}</option>)}
               </select>
+              {errors.driver_id && <p className="text-rose-400 text-xs mt-1">{errors.driver_id}</p>}
               {drivers.length === 0 && <p className="text-xs text-amber-400 mt-1">No eligible drivers available.</p>}
             </div>
             <div>
               <label className="label">Cargo Weight (kg) *</label>
               <input className="input" type="number" placeholder="450" value={form.cargo_weight_kg}
                 onChange={e => setForm(f => ({ ...f, cargo_weight_kg: e.target.value }))} />
+              {errors.cargo_weight_kg && <p className="text-rose-400 text-xs mt-1">{errors.cargo_weight_kg}</p>}
             </div>
             <div>
-              <label className="label">Planned Distance (km)</label>
+              <label className="label">Planned Distance (km) *</label>
               <input className="input" type="number" placeholder="148" value={form.planned_distance_km}
                 onChange={e => setForm(f => ({ ...f, planned_distance_km: e.target.value }))} />
+              {errors.planned_distance_km && <p className="text-rose-400 text-xs mt-1">{errors.planned_distance_km}</p>}
             </div>
             <div>
               <label className="label">Revenue (₹)</label>
               <input className="input" type="number" placeholder="12000" value={form.revenue}
                 onChange={e => setForm(f => ({ ...f, revenue: e.target.value }))} />
+              {errors.revenue && <p className="text-rose-400 text-xs mt-1">{errors.revenue}</p>}
             </div>
             <div>
               <label className="label">Notes</label>
@@ -319,7 +351,7 @@ export default function Trips() {
           </div>
 
           {/* Live capacity validation */}
-          {form.vehicle_id && form.cargo_weight_kg && (
+          {form.vehicle_id && form.cargo_weight_kg && !errors.cargo_weight_kg && (
             <CapacityBar cargo={cargoNum} max={selectedVehicle?.max_capacity_kg} />
           )}
 

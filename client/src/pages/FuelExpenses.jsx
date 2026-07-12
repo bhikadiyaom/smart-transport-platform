@@ -22,7 +22,7 @@ export default function FuelExpenses() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editTarget, setEditTarget] = useState(null);
   const [form, setForm] = useState(emptyFuel);
-  const [formError, setFormError] = useState('');
+  const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [opCosts, setOpCosts] = useState({});
 
@@ -58,7 +58,7 @@ export default function FuelExpenses() {
   const openAdd = () => {
     setEditTarget(null);
     setForm(tab === 'fuel' ? emptyFuel : emptyExpense);
-    setFormError(''); setModalOpen(true);
+    setErrors({}); setModalOpen(true);
   };
 
   const openEdit = (item) => {
@@ -68,15 +68,51 @@ export default function FuelExpenses() {
     } else {
       setForm({ vehicle_id: item.vehicle_id?._id || '', trip_id: item.trip_id?._id || '', toll: item.toll, other: item.other, maintenance_linked: item.maintenance_linked, description: item.description, date: item.date?.slice(0, 10) });
     }
-    setFormError(''); setModalOpen(true);
+    setErrors({}); setModalOpen(true);
   };
 
   const handleSave = async () => {
-    if (!form.vehicle_id) { setFormError('Vehicle is required.'); return; }
-    setSaving(true); setFormError('');
+    const newErrors = {};
+    if (!form.vehicle_id) newErrors.vehicle_id = 'Vehicle selection is required.';
+    
+    if (!form.date) newErrors.date = 'Date is required.';
+    else {
+      const d = new Date(form.date);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999); // allow today
+      if (d > today) newErrors.date = 'Date cannot be in the future.';
+    }
+
+    if (tab === 'fuel') {
+      const litersVal = Number(form.liters);
+      if (form.liters === '' || isNaN(litersVal)) newErrors.liters = 'Liters is required.';
+      else if (litersVal <= 0) newErrors.liters = 'Liters must be greater than zero.';
+
+      const costVal = Number(form.cost);
+      if (form.cost === '' || isNaN(costVal)) newErrors.cost = 'Cost is required.';
+      else if (costVal <= 0) newErrors.cost = 'Cost must be greater than zero.';
+    } else {
+      const tollVal = Number(form.toll || 0);
+      const otherVal = Number(form.other || 0);
+      const maintVal = Number(form.maintenance_linked || 0);
+
+      if (form.toll !== '' && (isNaN(tollVal) || tollVal < 0)) newErrors.toll = 'Toll must be non-negative.';
+      if (form.other !== '' && (isNaN(otherVal) || otherVal < 0)) newErrors.other = 'Other must be non-negative.';
+      if (form.maintenance_linked !== '' && (isNaN(maintVal) || maintVal < 0)) newErrors.maintenance_linked = 'Maintenance must be non-negative.';
+
+      if (tollVal === 0 && otherVal === 0 && maintVal === 0) {
+        newErrors.global = 'At least one expense amount (Toll, Other, or Maintenance) must be greater than zero.';
+      }
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setSaving(true); setErrors({});
     try {
       if (tab === 'fuel') {
-        if (!form.liters || !form.cost) { setFormError('Liters and cost are required.'); setSaving(false); return; }
         if (editTarget) await financeAPI.updateFuelLog(editTarget._id, form);
         else await financeAPI.createFuelLog(form);
         toast.success(editTarget ? 'Fuel log updated.' : 'Fuel log created.');
@@ -87,7 +123,7 @@ export default function FuelExpenses() {
       }
       setModalOpen(false); load();
     } catch (err) {
-      setFormError(err.response?.data?.message || 'Failed to save.');
+      setErrors({ global: err.response?.data?.message || 'Failed to save transaction.' });
     } finally { setSaving(false); }
   };
 
@@ -254,13 +290,14 @@ export default function FuelExpenses() {
       {/* Add/Edit Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editTarget ? `Edit ${tab === 'fuel' ? 'Fuel Log' : 'Expense'}` : `Add ${tab === 'fuel' ? 'Fuel Log' : 'Expense'}`}>
         <div className="space-y-4">
-          <ErrorCallout message={formError} />
+          <ErrorCallout message={errors.global} />
           <div>
             <label className="label">Vehicle *</label>
             <select className="select" value={form.vehicle_id} onChange={e => setForm(f => ({ ...f, vehicle_id: e.target.value }))}>
               <option value="">Select vehicle…</option>
               {vehicles.map(v => <option key={v._id} value={v._id}>{v.registration_no} — {v.name_model}</option>)}
             </select>
+            {errors.vehicle_id && <p className="text-rose-400 text-xs mt-1">{errors.vehicle_id}</p>}
           </div>
           <div>
             <label className="label">Trip (optional)</label>
@@ -270,8 +307,9 @@ export default function FuelExpenses() {
             </select>
           </div>
           <div>
-            <label className="label">Date</label>
+            <label className="label">Date *</label>
             <input className="input" type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
+            {errors.date && <p className="text-rose-400 text-xs mt-1">{errors.date}</p>}
           </div>
 
           {tab === 'fuel' ? (
@@ -279,10 +317,12 @@ export default function FuelExpenses() {
               <div>
                 <label className="label">Liters *</label>
                 <input className="input" type="number" placeholder="38.5" value={form.liters} onChange={e => setForm(f => ({ ...f, liters: e.target.value }))} />
+                {errors.liters && <p className="text-rose-400 text-xs mt-1">{errors.liters}</p>}
               </div>
               <div>
                 <label className="label">Cost (₹) *</label>
                 <input className="input" type="number" placeholder="3465" value={form.cost} onChange={e => setForm(f => ({ ...f, cost: e.target.value }))} />
+                {errors.cost && <p className="text-rose-400 text-xs mt-1">{errors.cost}</p>}
               </div>
             </div>
           ) : (
@@ -291,14 +331,17 @@ export default function FuelExpenses() {
                 <div>
                   <label className="label">Toll (₹)</label>
                   <input className="input" type="number" placeholder="380" value={form.toll} onChange={e => setForm(f => ({ ...f, toll: e.target.value }))} />
+                  {errors.toll && <p className="text-rose-400 text-xs mt-1">{errors.toll}</p>}
                 </div>
                 <div>
                   <label className="label">Other (₹)</label>
                   <input className="input" type="number" placeholder="200" value={form.other} onChange={e => setForm(f => ({ ...f, other: e.target.value }))} />
+                  {errors.other && <p className="text-rose-400 text-xs mt-1">{errors.other}</p>}
                 </div>
                 <div>
                   <label className="label">Maintenance (₹)</label>
                   <input className="input" type="number" placeholder="0" value={form.maintenance_linked} onChange={e => setForm(f => ({ ...f, maintenance_linked: e.target.value }))} />
+                  {errors.maintenance_linked && <p className="text-rose-400 text-xs mt-1">{errors.maintenance_linked}</p>}
                 </div>
               </div>
               <div>
