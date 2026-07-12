@@ -18,16 +18,16 @@ const navItems = [
 ];
 
 const roleColors = {
-  fleet_manager: 'text-indigo-400 bg-indigo-900/30',
-  dispatcher: 'text-blue-400 bg-blue-900/30',
-  safety_officer: 'text-emerald-400 bg-emerald-900/30',
+  fleet_manager:     'text-indigo-400 bg-indigo-900/30',
+  dispatcher:        'text-blue-400 bg-blue-900/30',
+  safety_officer:    'text-emerald-400 bg-emerald-900/30',
   financial_analyst: 'text-amber-400 bg-amber-900/30',
 };
 
 const roleLabels = {
-  fleet_manager: 'Fleet Manager',
-  dispatcher: 'Dispatcher',
-  safety_officer: 'Safety Officer',
+  fleet_manager:     'Fleet Manager',
+  dispatcher:        'Dispatcher',
+  safety_officer:    'Safety Officer',
   financial_analyst: 'Financial Analyst',
 };
 
@@ -38,6 +38,7 @@ export default function Sidebar() {
   const [theme, setTheme] = useState(() => {
     return document.documentElement.classList.contains('light') ? 'light' : 'dark';
   });
+  const [iconKey, setIconKey] = useState(0);
 
   const toggleTheme = () => {
     const nextTheme = theme === 'light' ? 'dark' : 'light';
@@ -48,6 +49,7 @@ export default function Sidebar() {
     }
     localStorage.setItem('theme', nextTheme);
     setTheme(nextTheme);
+    setIconKey(k => k + 1); // remount icon to trigger animation
   };
 
   const handleLogout = () => {
@@ -56,11 +58,11 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-64 min-h-screen bg-slate-900 border-r border-slate-800 flex flex-col">
+    <aside className="w-64 min-h-screen bg-slate-900 border-r border-slate-800 flex flex-col" style={{ transition: 'background-color 300ms ease' }}>
       {/* Logo */}
       <div className="p-6 border-b border-slate-800">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center">
+          <div className="w-9 h-9 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-900/40">
             <Zap className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -71,7 +73,7 @@ export default function Sidebar() {
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-3 space-y-0.5">
         {navItems.map(({ to, label, icon: Icon, resource }) => {
           const hasAccess = can('view', resource) || resource === 'dashboard';
           if (!hasAccess) return null;
@@ -84,7 +86,7 @@ export default function Sidebar() {
                 isActive ? 'nav-item-active' : 'nav-item'
               }
             >
-              <Icon className="w-4 h-4 flex-shrink-0" />
+              <Icon className="nav-icon w-4 h-4" />
               <span>{label}</span>
             </NavLink>
           );
@@ -92,9 +94,9 @@ export default function Sidebar() {
       </nav>
 
       {/* User card */}
-      <div className="p-4 border-t border-slate-800">
+      <div className="p-4 border-t border-slate-800 space-y-1">
         <div className="flex items-center gap-3 mb-3">
-          <div className="w-9 h-9 rounded-full bg-primary-700 flex items-center justify-center text-sm font-bold text-white">
+          <div className="w-9 h-9 rounded-full bg-primary-700 flex items-center justify-center text-sm font-bold text-white shadow">
             {user?.name?.charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
@@ -104,28 +106,24 @@ export default function Sidebar() {
             </span>
           </div>
         </div>
-        
-        {/* Theme Toggle */}
+
+        {/* Theme Toggle — animated icon */}
         <button
           onClick={toggleTheme}
-          className="w-full flex items-center gap-2 text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800/80 px-3 py-2 rounded-lg transition-all duration-200 mb-2"
+          className="w-full flex items-center gap-2.5 text-sm text-slate-400 hover:text-slate-100 hover:bg-slate-800 px-3 py-2 rounded-lg transition-all duration-200 mb-1"
         >
-          {theme === 'light' ? (
-            <>
-              <Moon className="w-4 h-4" />
-              <span>Dark Theme</span>
-            </>
-          ) : (
-            <>
-              <Sun className="w-4 h-4" />
-              <span>Light Theme</span>
-            </>
-          )}
+          <span key={iconKey} className="theme-icon-enter">
+            {theme === 'light'
+              ? <Moon className="w-4 h-4" />
+              : <Sun className="w-4 h-4" />
+            }
+          </span>
+          <span>{theme === 'light' ? 'Dark Theme' : 'Light Theme'}</span>
         </button>
 
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-2 text-sm text-slate-400 hover:text-rose-400 hover:bg-rose-900/20 px-3 py-2 rounded-lg transition-all duration-200"
+          className="w-full flex items-center gap-2.5 text-sm text-slate-400 hover:text-rose-400 hover:bg-rose-900/20 px-3 py-2 rounded-lg transition-all duration-200"
         >
           <LogOut className="w-4 h-4" />
           Sign out
