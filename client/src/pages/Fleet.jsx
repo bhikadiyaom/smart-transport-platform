@@ -176,9 +176,15 @@ export default function Fleet() {
                 {canEdit && <th className="table-header">Actions</th>}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-700/50">
+            <tbody className={`divide-y divide-slate-700/30 ${!loading ? 'table-fade-in' : ''}`}>
               {loading ? (
-                <tr><td colSpan={8} className="table-cell text-center text-slate-500 py-12">Loading vehicles…</td></tr>
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i}>
+                    {Array.from({ length: canEdit ? 8 : 7 }).map((_, j) => (
+                      <td key={j} className="table-cell"><div className="h-4 rounded skeleton" /></td>
+                    ))}
+                  </tr>
+                ))
               ) : vehicles.length === 0 ? (
                 <tr><td colSpan={8} className="table-cell text-center text-slate-500 py-12">No vehicles found. {canEdit && 'Click "Add Vehicle" to get started.'}</td></tr>
               ) : vehicles.map(v => (
@@ -192,11 +198,11 @@ export default function Fleet() {
                   <td className="table-cell"><StatusPill status={v.status} /></td>
                   {canEdit && (
                     <td className="table-cell">
-                      <div className="flex gap-2">
-                        <button onClick={() => openEdit(v)} className="text-slate-400 hover:text-white transition-colors p-1">
+                      <div className="flex gap-1">
+                        <button onClick={() => openEdit(v)} className="icon-btn" title="Edit vehicle">
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => setDeleteTarget(v)} className="text-slate-400 hover:text-rose-400 transition-colors p-1">
+                        <button onClick={() => setDeleteTarget(v)} className="icon-btn hover:text-rose-400 hover:bg-rose-900/20" title="Delete vehicle">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -218,13 +224,13 @@ export default function Fleet() {
               <label className="label">Registration No. *</label>
               <input className="input uppercase" placeholder="VAN-05" value={form.registration_no}
                 onChange={e => setForm(f => ({ ...f, registration_no: e.target.value }))} />
-              {errors.registration_no && <p className="text-rose-400 text-xs mt-1">{errors.registration_no}</p>}
+              {errors.registration_no && <p className="field-error">{errors.registration_no}</p>}
             </div>
             <div>
               <label className="label">Model Name *</label>
               <input className="input" placeholder="Toyota HiAce" value={form.name_model}
                 onChange={e => setForm(f => ({ ...f, name_model: e.target.value }))} />
-              {errors.name_model && <p className="text-rose-400 text-xs mt-1">{errors.name_model}</p>}
+              {errors.name_model && <p className="field-error">{errors.name_model}</p>}
             </div>
             <div>
               <label className="label">Type *</label>
@@ -237,19 +243,19 @@ export default function Fleet() {
               <label className="label">Max Capacity (kg) *</label>
               <input className="input" type="number" placeholder="600" value={form.max_capacity_kg}
                 onChange={e => setForm(f => ({ ...f, max_capacity_kg: e.target.value }))} />
-              {errors.max_capacity_kg && <p className="text-rose-400 text-xs mt-1">{errors.max_capacity_kg}</p>}
+              {errors.max_capacity_kg && <p className="field-error">{errors.max_capacity_kg}</p>}
             </div>
             <div>
               <label className="label">Odometer (km) *</label>
               <input className="input" type="number" placeholder="0" value={form.odometer}
                 onChange={e => setForm(f => ({ ...f, odometer: e.target.value }))} />
-              {errors.odometer && <p className="text-rose-400 text-xs mt-1">{errors.odometer}</p>}
+              {errors.odometer && <p className="field-error">{errors.odometer}</p>}
             </div>
             <div>
               <label className="label">Acquisition Cost (₹) *</label>
               <input className="input" type="number" placeholder="850000" value={form.acquisition_cost}
                 onChange={e => setForm(f => ({ ...f, acquisition_cost: e.target.value }))} />
-              {errors.acquisition_cost && <p className="text-rose-400 text-xs mt-1">{errors.acquisition_cost}</p>}
+              {errors.acquisition_cost && <p className="field-error">{errors.acquisition_cost}</p>}
             </div>
             <div className="col-span-2">
               <label className="label">Status *</label>
@@ -262,7 +268,7 @@ export default function Fleet() {
           <div className="flex justify-end gap-3 pt-2">
             <button className="btn-secondary" onClick={() => setModalOpen(false)}>Cancel</button>
             <button className="btn-primary" onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving…' : editingId ? 'Update Vehicle' : 'Add Vehicle'}
+              {saving ? <><span className="spinner" /> Saving…</> : editingId ? 'Update Vehicle' : 'Add Vehicle'}
             </button>
           </div>
         </div>

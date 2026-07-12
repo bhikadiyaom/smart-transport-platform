@@ -97,7 +97,7 @@ export default function Maintenance() {
         <div className="flex gap-2">
           <CSVExportButton data={csvData} filename="maintenance_logs" />
           {canEdit && (
-            <button className="btn-primary" onClick={() => { setModalOpen(true); setForm(emptyForm); setFormError(''); }}>
+            <button className="btn-primary" onClick={() => { setModalOpen(true); setForm(emptyForm); setErrors({}); }}>
               <Plus className="w-4 h-4" /> Log Service
             </button>
           )}
@@ -125,9 +125,15 @@ export default function Maintenance() {
                 {canEdit && <th className="table-header">Actions</th>}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-700/50">
+            <tbody className={`divide-y divide-slate-700/30 ${!loading ? 'table-fade-in' : ''}`}>
               {loading ? (
-                <tr><td colSpan={7} className="table-cell text-center text-slate-500 py-12">Loading…</td></tr>
+                Array.from({ length: 4 }).map((_, i) => (
+                  <tr key={i}>
+                    {Array.from({ length: canEdit ? 7 : 6 }).map((_, j) => (
+                      <td key={j} className="table-cell"><div className="h-4 rounded skeleton" /></td>
+                    ))}
+                  </tr>
+                ))
               ) : logs.length === 0 ? (
                 <tr><td colSpan={7} className="table-cell text-center text-slate-500 py-12">No maintenance records yet.</td></tr>
               ) : logs.map(log => (
@@ -148,13 +154,13 @@ export default function Maintenance() {
                   <td className="table-cell text-slate-500 text-xs max-w-48 truncate">{log.notes || '—'}</td>
                   {canEdit && (
                     <td className="table-cell">
-                      <div className="flex gap-2">
+                      <div className="flex gap-1">
                         {log.status === 'in_shop' && (
                           <button onClick={() => setCloseTarget(log)} className="btn-success text-xs px-2 py-1">
                             <CheckCircle className="w-3 h-3" /> Close
                           </button>
                         )}
-                        <button onClick={() => setDeleteTarget(log)} className="text-slate-400 hover:text-rose-400 p-1">
+                        <button onClick={() => setDeleteTarget(log)} className="icon-btn hover:text-rose-400 hover:bg-rose-900/20" title="Delete log">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -180,26 +186,26 @@ export default function Maintenance() {
               <option value="">Select vehicle…</option>
               {vehicles.map(v => <option key={v._id} value={v._id}>{v.registration_no} — {v.name_model} ({v.status})</option>)}
             </select>
-            {errors.vehicle_id && <p className="text-rose-400 text-xs mt-1">{errors.vehicle_id}</p>}
+            {errors.vehicle_id && <p className="field-error">{errors.vehicle_id}</p>}
           </div>
           <div>
             <label className="label">Service Type *</label>
             <input className="input" placeholder="Engine Overhaul, Tyre Replacement…" value={form.service_type}
               onChange={e => setForm(f => ({ ...f, service_type: e.target.value }))} />
-            {errors.service_type && <p className="text-rose-400 text-xs mt-1">{errors.service_type}</p>}
+            {errors.service_type && <p className="field-error">{errors.service_type}</p>}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="label">Cost (₹) *</label>
               <input className="input" type="number" placeholder="45000" value={form.cost}
                 onChange={e => setForm(f => ({ ...f, cost: e.target.value }))} />
-              {errors.cost && <p className="text-rose-400 text-xs mt-1">{errors.cost}</p>}
+              {errors.cost && <p className="field-error">{errors.cost}</p>}
             </div>
             <div>
               <label className="label">Date *</label>
               <input className="input" type="date" value={form.date}
                 onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
-              {errors.date && <p className="text-rose-400 text-xs mt-1">{errors.date}</p>}
+              {errors.date && <p className="field-error">{errors.date}</p>}
             </div>
           </div>
           <div>
@@ -210,7 +216,7 @@ export default function Maintenance() {
           <div className="flex justify-end gap-3 pt-2">
             <button className="btn-secondary" onClick={() => setModalOpen(false)}>Cancel</button>
             <button className="btn-primary" onClick={handleCreate} disabled={saving}>
-              {saving ? 'Logging…' : 'Log Service Record'}
+              {saving ? <><span className="spinner" /> Logging…</> : 'Log Service Record'}
             </button>
           </div>
         </div>
