@@ -190,9 +190,16 @@ export default function FuelExpenses() {
                 {canEdit && <th className="table-header">Actions</th>}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-700/50">
-              {loading ? <tr><td colSpan={6} className="table-cell text-center text-slate-500 py-8">Loading…</td></tr>
-                : fuelLogs.length === 0 ? <tr><td colSpan={6} className="table-cell text-center text-slate-500 py-8">No fuel logs yet.</td></tr>
+            <tbody className={`divide-y divide-slate-700/30 ${!loading ? 'table-fade-in' : ''}`}>
+              {loading ? (
+                Array.from({ length: 4 }).map((_, i) => (
+                  <tr key={i}>
+                    {Array.from({ length: canEdit ? 6 : 5 }).map((_, j) => (
+                      <td key={j} className="table-cell"><div className="h-4 rounded skeleton" /></td>
+                    ))}
+                  </tr>
+                ))
+              ) : fuelLogs.length === 0 ? <tr><td colSpan={6} className="table-cell text-center text-slate-500 py-8">No fuel logs yet.</td></tr>
                 : fuelLogs.map(f => (
                   <tr key={f._id} className="hover:bg-slate-700/20">
                     <td className="table-cell font-mono text-sm">{f.vehicle_id?.registration_no}</td>
@@ -202,9 +209,9 @@ export default function FuelExpenses() {
                     <td className="table-cell font-medium">₹{f.cost?.toLocaleString()}</td>
                     {canEdit && (
                       <td className="table-cell">
-                        <div className="flex gap-2">
-                          <button onClick={() => openEdit(f)} className="text-slate-400 hover:text-white p-1"><Pencil className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => handleDelete(f._id)} className="text-slate-400 hover:text-rose-400 p-1"><Trash2 className="w-3.5 h-3.5" /></button>
+                        <div className="flex gap-1">
+                          <button onClick={() => openEdit(f)} className="icon-btn" title="Edit"><Pencil className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => handleDelete(f._id)} className="icon-btn hover:text-rose-400 hover:bg-rose-900/20" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
                         </div>
                       </td>
                     )}
@@ -231,9 +238,16 @@ export default function FuelExpenses() {
                 {canEdit && <th className="table-header">Actions</th>}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-700/50">
-              {loading ? <tr><td colSpan={8} className="table-cell text-center text-slate-500 py-8">Loading…</td></tr>
-                : expenses.length === 0 ? <tr><td colSpan={8} className="table-cell text-center text-slate-500 py-8">No expenses yet.</td></tr>
+            <tbody className={`divide-y divide-slate-700/30 ${!loading ? 'table-fade-in' : ''}`}>
+              {loading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <tr key={i}>
+                    {Array.from({ length: canEdit ? 8 : 7 }).map((_, j) => (
+                      <td key={j} className="table-cell"><div className="h-4 rounded skeleton" /></td>
+                    ))}
+                  </tr>
+                ))
+              ) : expenses.length === 0 ? <tr><td colSpan={8} className="table-cell text-center text-slate-500 py-8">No expenses yet.</td></tr>
                 : expenses.map(e => (
                   <tr key={e._id} className="hover:bg-slate-700/20">
                     <td className="table-cell font-mono text-sm">{e.vehicle_id?.registration_no}</td>
@@ -245,9 +259,9 @@ export default function FuelExpenses() {
                     <td className="table-cell text-slate-400">{fmtDate(e.date)}</td>
                     {canEdit && (
                       <td className="table-cell">
-                        <div className="flex gap-2">
-                          <button onClick={() => openEdit(e)} className="text-slate-400 hover:text-white p-1"><Pencil className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => handleDelete(e._id)} className="text-slate-400 hover:text-rose-400 p-1"><Trash2 className="w-3.5 h-3.5" /></button>
+                        <div className="flex gap-1">
+                          <button onClick={() => openEdit(e)} className="icon-btn" title="Edit"><Pencil className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => handleDelete(e._id)} className="icon-btn hover:text-rose-400 hover:bg-rose-900/20" title="Delete"><Trash2 className="w-3.5 h-3.5" /></button>
                         </div>
                       </td>
                     )}
@@ -270,7 +284,7 @@ export default function FuelExpenses() {
                 <th className="table-header">Total Op. Cost</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-700/50">
+            <tbody className="divide-y divide-slate-700/30 table-fade-in">
               {vehicles.map(v => {
                 const c = opCosts[v._id];
                 return (
