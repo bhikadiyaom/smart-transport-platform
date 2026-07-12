@@ -36,27 +36,14 @@ export default function Login() {
     }
   };
 
-  // Quick demo login buttons
+  // Demo accounts for dropdown
   const demoAccounts = [
-    { label: 'Fleet Manager', email: 'fleet@transitops.com', color: 'text-indigo-400' },
-    { label: 'Dispatcher', email: 'dispatch@transitops.com', color: 'text-blue-400' },
-    { label: 'Safety Officer', email: 'safety@transitops.com', color: 'text-emerald-400' },
-    { label: 'Financial Analyst', email: 'finance@transitops.com', color: 'text-amber-400' },
+    { label: 'PRINCE (Fleet Manager)', email: 'd24it149@charusat.edu.in' },
+    { label: 'Fleet Manager Mike', email: 'fleet@transitops.com' },
+    { label: 'Dispatcher Dave', email: 'dispatch@transitops.com' },
+    { label: 'Safety Officer Sara', email: 'safety@transitops.com' },
+    { label: 'Financial Analyst Fiona', email: 'finance@transitops.com' },
   ];
-
-  const quickLogin = async (email) => {
-    setLoading(true);
-    setError('');
-    try {
-      const res = await authAPI.login({ email, password: 'TransitOps@2024', rememberMe: false });
-      login(res.data.user, res.data.token, false);
-      navigate('/');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Quick login failed.');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
@@ -85,6 +72,30 @@ export default function Login() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="label">Select a Role (Auto-fill)</label>
+              <select
+                className="select"
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val) {
+                    setForm(f => ({ ...f, email: val, password: 'TransitOps@2024' }));
+                  } else {
+                    setForm(f => ({ ...f, email: '', password: '' }));
+                  }
+                  if (error) setError('');
+                }}
+                value={form.email}
+              >
+                <option value="">-- Custom / Manual Entry --</option>
+                {demoAccounts.map(account => (
+                  <option key={account.email} value={account.email}>
+                    {account.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div>
               <label className="label">Email address</label>
               <input
@@ -142,26 +153,6 @@ export default function Login() {
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </form>
-
-          {/* Demo quick login */}
-          <div className="mt-6 pt-6 border-t border-slate-700">
-            <p className="text-xs text-slate-500 text-center mb-3">
-              🚀 Demo accounts — click to log in instantly
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              {demoAccounts.map(({ label, email, color }) => (
-                <button
-                  key={email}
-                  onClick={() => quickLogin(email)}
-                  disabled={loading}
-                  className="text-xs px-3 py-2 rounded-lg bg-slate-700/60 hover:bg-slate-700 transition-all border border-slate-600 hover:border-slate-500 text-left"
-                >
-                  <span className={`font-medium ${color}`}>{label}</span>
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-slate-600 text-center mt-2">Password: TransitOps@2024</p>
-          </div>
         </div>
       </div>
     </div>
