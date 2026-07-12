@@ -224,14 +224,34 @@ export default function Trips() {
       {/* Trip Live Board */}
       <div className="space-y-3">
         {loading ? (
-          <div className="card text-center text-slate-500 py-12">Loading trips…</div>
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="card space-y-3">
+                <div className="flex justify-between">
+                  <div className="flex gap-2">
+                    {Array.from({ length: 4 }).map((_, j) => <div key={j} className="w-16 h-5 rounded-full skeleton" />)}
+                  </div>
+                  <div className="w-24 h-7 rounded-lg skeleton" />
+                </div>
+                <div className="w-3/4 h-5 rounded skeleton" />
+                <div className="flex gap-4">
+                  <div className="w-20 h-3 rounded skeleton" />
+                  <div className="w-20 h-3 rounded skeleton" />
+                  <div className="w-16 h-3 rounded skeleton" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : trips.length === 0 ? (
           <div className="card text-center py-12">
             <MapPin className="w-8 h-8 text-slate-600 mx-auto mb-2" />
             <p className="text-slate-500">No trips found. {canEdit && 'Create your first trip above.'}</p>
           </div>
         ) : trips.map(trip => (
-          <div key={trip._id} className="card">
+          <div key={trip._id} className="card" style={{ transition: 'transform 200ms ease, box-shadow 200ms ease' }}
+               onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 28px rgba(0,0,0,0.4)'; }}
+               onMouseLeave={e => { e.currentTarget.style.transform = ''; e.currentTarget.style.boxShadow = ''; }}
+          >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">

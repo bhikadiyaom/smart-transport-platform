@@ -183,9 +183,15 @@ export default function Drivers() {
                 {canEdit && <th className="table-header">Actions</th>}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-700/50">
+            <tbody className={`divide-y divide-slate-700/30 ${!loading ? 'table-fade-in' : ''}`}>
               {loading ? (
-                <tr><td colSpan={8} className="table-cell text-center text-slate-500 py-12">Loading…</td></tr>
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i}>
+                    {Array.from({ length: canEdit ? 8 : 7 }).map((_, j) => (
+                      <td key={j} className="table-cell"><div className="h-4 rounded skeleton" /></td>
+                    ))}
+                  </tr>
+                ))
               ) : drivers.length === 0 ? (
                 <tr><td colSpan={8} className="table-cell text-center text-slate-500 py-12">No drivers found.</td></tr>
               ) : drivers.map(d => {
@@ -228,9 +234,13 @@ export default function Drivers() {
                     </td>
                     {canEdit && (
                       <td className="table-cell">
-                        <div className="flex gap-2">
-                          <button onClick={() => openEdit(d)} className="text-slate-400 hover:text-white p-1"><Pencil className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => setDeleteTarget(d)} className="text-slate-400 hover:text-rose-400 p-1"><Trash2 className="w-3.5 h-3.5" /></button>
+                        <div className="flex gap-1">
+                          <button onClick={() => openEdit(d)} className="icon-btn" title="Edit driver">
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button onClick={() => setDeleteTarget(d)} className="icon-btn hover:text-rose-400 hover:bg-rose-900/20" title="Delete driver">
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </td>
                     )}
@@ -308,7 +318,7 @@ export default function Drivers() {
           <div className="flex justify-end gap-3 pt-2">
             <button className="btn-secondary" onClick={() => setModalOpen(false)}>Cancel</button>
             <button className="btn-primary" onClick={handleSave} disabled={saving}>
-              {saving ? 'Saving…' : editingId ? 'Update Driver' : 'Add Driver'}
+              {saving ? <><span className="spinner" /> Saving…</> : editingId ? 'Update Driver' : 'Add Driver'}
             </button>
           </div>
         </div>
