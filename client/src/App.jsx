@@ -36,7 +36,7 @@ function ProtectedLayout() {
   return (
     <div className="flex min-h-screen">
       <Sidebar />
-      <main className="flex-1 overflow-auto bg-slate-900">
+      <main className="flex-1 overflow-auto bg-transparent relative">
         <AnimatedPage>
           <Outlet />
         </AnimatedPage>

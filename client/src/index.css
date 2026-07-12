@@ -94,38 +94,55 @@ html.light {
 /* ── Base Layer ──────────────────────────────────────────────── */
 @layer base {
   * {
-    @apply border-slate-700;
+    @apply border-slate-700/50;
   }
   body {
-    @apply bg-slate-900 text-slate-100 font-sans antialiased;
+    @apply text-slate-100 font-sans antialiased;
+    background-color: rgb(var(--slate-900));
+    background-image: 
+      radial-gradient(at 10% 20%, rgba(99, 102, 241, 0.08) 0px, transparent 45%),
+      radial-gradient(at 90% 10%, rgba(139, 92, 246, 0.07) 0px, transparent 40%),
+      radial-gradient(at 50% 80%, rgba(59, 130, 246, 0.05) 0px, transparent 50%);
+    background-attachment: fixed;
     transition: background-color 300ms ease, color 300ms ease;
   }
   ::-webkit-scrollbar { @apply w-1.5; }
-  ::-webkit-scrollbar-track { @apply bg-slate-800; }
-  ::-webkit-scrollbar-thumb { @apply bg-slate-600 rounded-full; }
+  ::-webkit-scrollbar-track { @apply bg-slate-800/40; }
+  ::-webkit-scrollbar-thumb { @apply bg-slate-600/60 rounded-full; }
 }
 
 /* ── Component Layer ─────────────────────────────────────────── */
 @layer components {
 
-  /* Cards */
+  /* Glass Cards */
   .card {
-    @apply bg-slate-800 border border-slate-700 rounded-xl p-6 shadow-lg;
-    transition: background-color 300ms ease, border-color 200ms ease, box-shadow 200ms ease;
+    background: rgba(var(--slate-800) / 0.45);
+    backdrop-filter: blur(20px) saturate(120%);
+    -webkit-backdrop-filter: blur(20px) saturate(120%);
+    border: 1px solid rgba(var(--slate-100) / 0.08);
+    @apply rounded-xl p-6 shadow-xl;
+    transition: background-color 300ms ease, border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
   }
   .card:hover {
-    box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+    background: rgba(var(--slate-800) / 0.55);
+    border-color: rgba(var(--slate-100) / 0.15);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.3);
   }
 
   /* KPI Card — lift on hover */
   .kpi-card {
-    @apply bg-slate-800 border border-slate-700 rounded-xl p-5;
-    transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease, background-color 300ms ease;
+    background: rgba(var(--slate-800) / 0.45);
+    backdrop-filter: blur(20px) saturate(120%);
+    -webkit-backdrop-filter: blur(20px) saturate(120%);
+    border: 1px solid rgba(var(--slate-100) / 0.08);
+    @apply rounded-xl p-5;
+    transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 250ms ease, border-color 250ms ease, background-color 300ms ease;
   }
   .kpi-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 28px rgba(0,0,0,0.4);
-    @apply border-slate-600;
+    transform: translateY(-4px);
+    background: rgba(var(--slate-800) / 0.55);
+    border-color: rgba(var(--slate-100) / 0.18);
+    box-shadow: 0 16px 36px rgba(0,0,0,0.35);
   }
 
   /* Staggered entrance for KPI cards */
@@ -171,19 +188,29 @@ html.light {
 
   /* Inputs — smooth focus glow */
   .input {
-    @apply w-full bg-slate-900 border border-slate-600 text-slate-100 rounded-lg px-3 py-2.5 focus:outline-none placeholder-slate-500;
-    transition: border-color 200ms ease, box-shadow 200ms ease;
+    background: rgba(var(--slate-900) / 0.35);
+    border: 1px solid rgba(var(--slate-100) / 0.1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    @apply w-full text-slate-100 rounded-lg px-3 py-2.5 focus:outline-none placeholder-slate-500;
+    transition: border-color 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
   }
   .input:focus {
+    background: rgba(var(--slate-900) / 0.5);
     border-color: #6366f1;
     box-shadow: 0 0 0 3px rgba(99,102,241,0.18);
   }
 
   .select {
-    @apply w-full bg-slate-900 border border-slate-600 text-slate-100 rounded-lg px-3 py-2.5 focus:outline-none;
-    transition: border-color 200ms ease, box-shadow 200ms ease;
+    background: rgba(var(--slate-900) / 0.35);
+    border: 1px solid rgba(var(--slate-100) / 0.1);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    @apply w-full text-slate-100 rounded-lg px-3 py-2.5 focus:outline-none;
+    transition: border-color 200ms ease, box-shadow 200ms ease, background-color 200ms ease;
   }
   .select:focus {
+    background: rgba(var(--slate-900) / 0.5);
     border-color: #6366f1;
     box-shadow: 0 0 0 3px rgba(99,102,241,0.18);
   }
@@ -287,13 +314,13 @@ html.light {
 
   /* Zebra-stripe rows */
   tbody tr:nth-child(even) {
-    background-color: rgb(var(--slate-700) / 0.12);
+    background-color: rgb(var(--slate-700) / 0.08);
   }
   tbody tr {
     transition: background-color 150ms ease;
   }
   tbody tr:hover {
-    background-color: rgb(var(--slate-700) / 0.35) !important;
+    background-color: rgb(var(--slate-700) / 0.25) !important;
   }
 
   /* Table fade-in when data loads */
@@ -306,7 +333,7 @@ html.light {
     @apply p-1.5 rounded-lg text-slate-400 transition-all duration-150;
   }
   .icon-btn:hover {
-    @apply text-white bg-slate-700;
+    @apply text-white bg-slate-700/50;
     transform: scale(1.1);
   }
   .icon-btn:active {
@@ -320,7 +347,7 @@ html.light {
     position: relative;
   }
   .nav-item:hover {
-    background-color: rgb(var(--slate-700) / 0.55);
+    background-color: rgb(var(--slate-700) / 0.35);
     @apply text-slate-100;
   }
   .nav-item:hover .nav-icon {
@@ -328,9 +355,9 @@ html.light {
   }
   .nav-item-active {
     @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-white text-sm font-medium;
-    background: linear-gradient(135deg, rgba(79,70,229,0.28) 0%, rgba(99,102,241,0.15) 100%);
-    border: 1px solid rgba(99,102,241,0.3);
-    box-shadow: inset 0 0 0 1px rgba(99,102,241,0.1);
+    background: linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(99,102,241,0.08) 100%);
+    border: 1px solid rgba(99,102,241,0.25);
+    box-shadow: inset 0 0 0 1px rgba(99,102,241,0.05);
   }
   /* Left accent bar on active item */
   .nav-item-active::before {
@@ -348,13 +375,25 @@ html.light {
     @apply flex-shrink-0;
   }
 
-  /* Modal — animated entrance */
+  /* Sidebar Glass Panel */
+  .sidebar {
+    background: rgba(var(--slate-900) / 0.55);
+    backdrop-filter: blur(24px) saturate(120%);
+    -webkit-backdrop-filter: blur(24px) saturate(120%);
+    border-right: 1px solid rgba(var(--slate-100) / 0.08);
+  }
+
+  /* Modal — animated entrance and glass style */
   .modal-overlay {
-    @apply fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4;
+    @apply fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4;
     animation: fadeIn 200ms ease;
   }
   .modal {
-    @apply bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto;
+    background: rgba(var(--slate-800) / 0.65);
+    backdrop-filter: blur(28px) saturate(120%);
+    -webkit-backdrop-filter: blur(28px) saturate(120%);
+    border: 1px solid rgba(var(--slate-100) / 0.1);
+    @apply rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto;
     animation: modalIn 250ms cubic-bezier(0.34,1.56,0.64,1);
   }
 

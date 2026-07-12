@@ -58,7 +58,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-64 min-h-screen bg-slate-900 border-r border-slate-800 flex flex-col" style={{ transition: 'background-color 300ms ease' }}>
+    <aside className="w-64 min-h-screen sidebar flex flex-col" style={{ transition: 'background-color 300ms ease' }}>
       {/* Logo */}
       <div className="p-6 border-b border-slate-800">
         <div className="flex items-center gap-3">
