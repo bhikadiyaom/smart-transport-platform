@@ -18,7 +18,7 @@ export default function Maintenance() {
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
-  const [formError, setFormError] = useState('');
+  const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [closeTarget, setCloseTarget] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -39,16 +39,28 @@ export default function Maintenance() {
   useEffect(() => { load(); }, []);
 
   const handleCreate = async () => {
-    if (!form.vehicle_id || !form.service_type) {
-      setFormError('Vehicle and service type are required.'); return;
+    const newErrors = {};
+    if (!form.vehicle_id) newErrors.vehicle_id = 'Vehicle is required.';
+    if (!form.service_type?.trim()) newErrors.service_type = 'Service description is required.';
+    
+    const costVal = Number(form.cost);
+    if (form.cost === '' || isNaN(costVal)) newErrors.cost = 'Service cost is required.';
+    else if (costVal < 0) newErrors.cost = 'Service cost cannot be negative.';
+
+    if (!form.date) newErrors.date = 'Date is required.';
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
     }
-    setSaving(true); setFormError('');
+
+    setSaving(true); setErrors({});
     try {
-      await maintenanceAPI.create({ ...form, cost: Number(form.cost) || 0, date: form.date || new Date().toISOString() });
+      await maintenanceAPI.create({ ...form, cost: Number(form.cost) || 0, date: form.date });
       toast.success('Maintenance log created — vehicle status → In Shop.');
       setModalOpen(false); setForm(emptyForm); load();
     } catch (err) {
-      setFormError(err.response?.data?.message || 'Failed to create maintenance log.');
+      setErrors({ global: err.response?.data?.message || 'Failed to create maintenance log.' });
     } finally { setSaving(false); }
   };
 
@@ -161,29 +173,33 @@ export default function Maintenance() {
           <div className="flex items-start gap-2 text-xs text-amber-300 bg-amber-900/20 border border-amber-700/30 rounded-lg p-3">
             <Info className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" /> This will immediately set the vehicle's status to In Shop.
           </div>
-          <ErrorCallout message={formError} />
+          <ErrorCallout message={errors.global} />
           <div>
             <label className="label">Vehicle *</label>
             <select className="select" value={form.vehicle_id} onChange={e => setForm(f => ({ ...f, vehicle_id: e.target.value }))}>
               <option value="">Select vehicle…</option>
               {vehicles.map(v => <option key={v._id} value={v._id}>{v.registration_no} — {v.name_model} ({v.status})</option>)}
             </select>
+            {errors.vehicle_id && <p className="text-rose-400 text-xs mt-1">{errors.vehicle_id}</p>}
           </div>
           <div>
             <label className="label">Service Type *</label>
             <input className="input" placeholder="Engine Overhaul, Tyre Replacement…" value={form.service_type}
               onChange={e => setForm(f => ({ ...f, service_type: e.target.value }))} />
+            {errors.service_type && <p className="text-rose-400 text-xs mt-1">{errors.service_type}</p>}
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label">Cost (₹)</label>
+              <label className="label">Cost (₹) *</label>
               <input className="input" type="number" placeholder="45000" value={form.cost}
                 onChange={e => setForm(f => ({ ...f, cost: e.target.value }))} />
+              {errors.cost && <p className="text-rose-400 text-xs mt-1">{errors.cost}</p>}
             </div>
             <div>
-              <label className="label">Date</label>
+              <label className="label">Date *</label>
               <input className="input" type="date" value={form.date}
                 onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
+              {errors.date && <p className="text-rose-400 text-xs mt-1">{errors.date}</p>}
             </div>
           </div>
           <div>

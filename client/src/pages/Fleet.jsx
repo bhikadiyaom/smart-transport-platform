@@ -25,7 +25,7 @@ export default function Fleet() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyForm);
-  const [formError, setFormError] = useState('');
+  const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
@@ -43,7 +43,7 @@ export default function Fleet() {
 
   useEffect(() => { load(); }, [filters]);
 
-  const openAdd = () => { setForm(emptyForm); setEditingId(null); setFormError(''); setModalOpen(true); };
+  const openAdd = () => { setForm(emptyForm); setEditingId(null); setErrors({}); setModalOpen(true); };
   const openEdit = (v) => {
     setForm({
       registration_no: v.registration_no, name_model: v.name_model, type: v.type,
@@ -51,17 +51,35 @@ export default function Fleet() {
       acquisition_cost: v.acquisition_cost, status: v.status
     });
     setEditingId(v._id);
-    setFormError('');
+    setErrors({});
     setModalOpen(true);
   };
 
   const handleSave = async () => {
-    if (!form.registration_no || !form.name_model || !form.max_capacity_kg) {
-      setFormError('Registration number, model name, and max capacity are required.');
+    const newErrors = {};
+    if (!form.registration_no?.trim()) newErrors.registration_no = 'Registration number is required.';
+    if (!form.name_model?.trim()) newErrors.name_model = 'Model name is required.';
+    if (!form.type) newErrors.type = 'Vehicle type is required.';
+    
+    const cap = Number(form.max_capacity_kg);
+    if (form.max_capacity_kg === '' || isNaN(cap)) newErrors.max_capacity_kg = 'Max Capacity is required.';
+    else if (cap <= 0) newErrors.max_capacity_kg = 'Max Capacity must be greater than zero.';
+
+    const odo = Number(form.odometer);
+    if (form.odometer === '' || isNaN(odo)) newErrors.odometer = 'Odometer is required.';
+    else if (odo < 0) newErrors.odometer = 'Odometer cannot be negative.';
+
+    const cost = Number(form.acquisition_cost);
+    if (form.acquisition_cost === '' || isNaN(cost)) newErrors.acquisition_cost = 'Acquisition cost is required.';
+    else if (cost <= 0) newErrors.acquisition_cost = 'Acquisition cost must be greater than zero.';
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+
     setSaving(true);
-    setFormError('');
+    setErrors({});
     try {
       if (editingId) {
         await vehiclesAPI.update(editingId, form);
@@ -73,7 +91,7 @@ export default function Fleet() {
       setModalOpen(false);
       load();
     } catch (err) {
-      setFormError(err.response?.data?.message || 'Failed to save vehicle.');
+      setErrors({ global: err.response?.data?.message || 'Failed to save vehicle.' });
     } finally {
       setSaving(false);
     }
@@ -194,44 +212,51 @@ export default function Fleet() {
       {/* Add/Edit Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editingId ? 'Edit Vehicle' : 'Add New Vehicle'}>
         <div className="space-y-4">
-          <ErrorCallout message={formError} />
+          <ErrorCallout message={errors.global} />
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="label">Registration No. *</label>
               <input className="input uppercase" placeholder="VAN-05" value={form.registration_no}
                 onChange={e => setForm(f => ({ ...f, registration_no: e.target.value }))} />
+              {errors.registration_no && <p className="text-rose-400 text-xs mt-1">{errors.registration_no}</p>}
             </div>
             <div>
               <label className="label">Model Name *</label>
               <input className="input" placeholder="Toyota HiAce" value={form.name_model}
                 onChange={e => setForm(f => ({ ...f, name_model: e.target.value }))} />
+              {errors.name_model && <p className="text-rose-400 text-xs mt-1">{errors.name_model}</p>}
             </div>
             <div>
               <label className="label">Type *</label>
               <select className="select" value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}>
                 {VEHICLE_TYPES.map(t => <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>)}
               </select>
+              {errors.type && <p className="text-rose-400 text-xs mt-1">{errors.type}</p>}
             </div>
             <div>
               <label className="label">Max Capacity (kg) *</label>
               <input className="input" type="number" placeholder="600" value={form.max_capacity_kg}
                 onChange={e => setForm(f => ({ ...f, max_capacity_kg: e.target.value }))} />
+              {errors.max_capacity_kg && <p className="text-rose-400 text-xs mt-1">{errors.max_capacity_kg}</p>}
             </div>
             <div>
-              <label className="label">Odometer (km)</label>
+              <label className="label">Odometer (km) *</label>
               <input className="input" type="number" placeholder="0" value={form.odometer}
                 onChange={e => setForm(f => ({ ...f, odometer: e.target.value }))} />
+              {errors.odometer && <p className="text-rose-400 text-xs mt-1">{errors.odometer}</p>}
             </div>
             <div>
-              <label className="label">Acquisition Cost (₹)</label>
+              <label className="label">Acquisition Cost (₹) *</label>
               <input className="input" type="number" placeholder="850000" value={form.acquisition_cost}
                 onChange={e => setForm(f => ({ ...f, acquisition_cost: e.target.value }))} />
+              {errors.acquisition_cost && <p className="text-rose-400 text-xs mt-1">{errors.acquisition_cost}</p>}
             </div>
             <div className="col-span-2">
-              <label className="label">Status</label>
+              <label className="label">Status *</label>
               <select className="select" value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}>
                 {VEHICLE_STATUSES.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
               </select>
+              {errors.status && <p className="text-rose-400 text-xs mt-1">{errors.status}</p>}
             </div>
           </div>
           <div className="flex justify-end gap-3 pt-2">

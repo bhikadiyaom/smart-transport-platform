@@ -9,7 +9,7 @@ import toast from 'react-hot-toast';
 
 const STATUS_OPTIONS = ['available', 'off_duty', 'suspended'];
 const emptyForm = {
-  name: '', license_no: '', license_category: 'LMV',
+  name: '', email: '', license_no: '', license_category: 'LMV',
   license_expiry: '', contact: '', safety_score: 100,
   trip_completion_pct: 100, status: 'available'
 };
@@ -55,7 +55,7 @@ export default function Drivers() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyForm);
-  const [formError, setFormError] = useState('');
+  const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
@@ -70,28 +70,50 @@ export default function Drivers() {
 
   useEffect(() => { load(); }, [search, statusFilter]);
 
-  const openAdd = () => { setForm(emptyForm); setEditingId(null); setFormError(''); setModalOpen(true); };
+  const openAdd = () => { setForm(emptyForm); setEditingId(null); setErrors({}); setModalOpen(true); };
   const openEdit = (d) => {
     setForm({
-      name: d.name, license_no: d.license_no, license_category: d.license_category,
+      name: d.name, email: d.email || '', license_no: d.license_no, license_category: d.license_category,
       license_expiry: d.license_expiry?.slice(0, 10), contact: d.contact,
       safety_score: d.safety_score, trip_completion_pct: d.trip_completion_pct, status: d.status
     });
-    setEditingId(d._id); setFormError(''); setModalOpen(true);
+    setEditingId(d._id); setErrors({}); setModalOpen(true);
   };
 
   const handleSave = async () => {
-    if (!form.name || !form.license_no || !form.license_expiry) {
-      setFormError('Name, license number, and expiry date are required.');
+    const newErrors = {};
+    if (!form.name?.trim()) newErrors.name = 'Full name is required.';
+    
+    if (!form.email?.trim()) newErrors.email = 'Email address is required.';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) newErrors.email = 'Invalid email address format.';
+
+    if (!form.license_no?.trim()) newErrors.license_no = 'License number is required.';
+    if (!form.license_category?.trim()) newErrors.license_category = 'License category is required.';
+    if (!form.license_expiry) newErrors.license_expiry = 'License expiry date is required.';
+
+    if (!form.contact?.trim()) newErrors.contact = 'Contact number is required.';
+    else if (!/^\d{10}$/.test(form.contact.replace(/[\s-+]/g, ''))) newErrors.contact = 'Contact number must be exactly 10 digits.';
+
+    const safety = Number(form.safety_score);
+    if (form.safety_score === '' || isNaN(safety)) newErrors.safety_score = 'Safety score is required.';
+    else if (safety < 0 || safety > 100) newErrors.safety_score = 'Safety score must be between 0 and 100.';
+
+    const tripPct = Number(form.trip_completion_pct);
+    if (form.trip_completion_pct === '' || isNaN(tripPct)) newErrors.trip_completion_pct = 'Trip completion percentage is required.';
+    else if (tripPct < 0 || tripPct > 100) newErrors.trip_completion_pct = 'Trip completion percentage must be between 0 and 100.';
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
-    setSaving(true); setFormError('');
+
+    setSaving(true); setErrors({});
     try {
       if (editingId) { await driversAPI.update(editingId, form); toast.success('Driver updated.'); }
       else { await driversAPI.create(form); toast.success('Driver added.'); }
       setModalOpen(false); load();
     } catch (err) {
-      setFormError(err.response?.data?.message || 'Failed to save driver.');
+      setErrors({ global: err.response?.data?.message || 'Failed to save driver.' });
     } finally { setSaving(false); }
   };
 
@@ -223,49 +245,63 @@ export default function Drivers() {
       {/* Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title={editingId ? 'Edit Driver' : 'Add Driver'}>
         <div className="space-y-4">
-          <ErrorCallout message={formError} />
+          <ErrorCallout message={errors.global} />
           <div className="grid grid-cols-2 gap-4">
             <div className="col-span-2">
               <label className="label">Full Name *</label>
               <input className="input" placeholder="Alex Kumar" value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+              {errors.name && <p className="text-rose-400 text-xs mt-1">{errors.name}</p>}
+            </div>
+            <div className="col-span-2">
+              <label className="label">Email Address *</label>
+              <input className="input" type="email" placeholder="alex@transitops.com" value={form.email}
+                onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+              {errors.email && <p className="text-rose-400 text-xs mt-1">{errors.email}</p>}
             </div>
             <div>
               <label className="label">License No. *</label>
               <input className="input uppercase" placeholder="DL-MH-09-2019-001234" value={form.license_no}
                 onChange={e => setForm(f => ({ ...f, license_no: e.target.value }))} />
+              {errors.license_no && <p className="text-rose-400 text-xs mt-1">{errors.license_no}</p>}
             </div>
             <div>
-              <label className="label">License Category</label>
+              <label className="label">License Category *</label>
               <input className="input" placeholder="LMV / HMV" value={form.license_category}
                 onChange={e => setForm(f => ({ ...f, license_category: e.target.value }))} />
+              {errors.license_category && <p className="text-rose-400 text-xs mt-1">{errors.license_category}</p>}
             </div>
             <div>
               <label className="label">License Expiry *</label>
               <input className="input" type="date" value={form.license_expiry}
                 onChange={e => setForm(f => ({ ...f, license_expiry: e.target.value }))} />
+              {errors.license_expiry && <p className="text-rose-400 text-xs mt-1">{errors.license_expiry}</p>}
             </div>
             <div>
-              <label className="label">Contact</label>
+              <label className="label">Contact *</label>
               <input className="input" placeholder="+91 9876543210" value={form.contact}
                 onChange={e => setForm(f => ({ ...f, contact: e.target.value }))} />
+              {errors.contact && <p className="text-rose-400 text-xs mt-1">{errors.contact}</p>}
             </div>
             <div>
-              <label className="label">Safety Score (0–100)</label>
+              <label className="label">Safety Score (0–100) *</label>
               <input className="input" type="number" min="0" max="100" value={form.safety_score}
-                onChange={e => setForm(f => ({ ...f, safety_score: Number(e.target.value) }))} />
+                onChange={e => setForm(f => ({ ...f, safety_score: e.target.value }))} />
+              {errors.safety_score && <p className="text-rose-400 text-xs mt-1">{errors.safety_score}</p>}
             </div>
             <div>
-              <label className="label">Trip Completion %</label>
+              <label className="label">Trip Completion % *</label>
               <input className="input" type="number" min="0" max="100" value={form.trip_completion_pct}
-                onChange={e => setForm(f => ({ ...f, trip_completion_pct: Number(e.target.value) }))} />
+                onChange={e => setForm(f => ({ ...f, trip_completion_pct: e.target.value }))} />
+              {errors.trip_completion_pct && <p className="text-rose-400 text-xs mt-1">{errors.trip_completion_pct}</p>}
             </div>
             {editingId && (
               <div className="col-span-2">
-                <label className="label">Status</label>
+                <label className="label">Status *</label>
                 <select className="select" value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value }))}>
                   {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s.replace('_', ' ')}</option>)}
                 </select>
+                {errors.status && <p className="text-rose-400 text-xs mt-1">{errors.status}</p>}
               </div>
             )}
           </div>
