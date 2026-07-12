@@ -4,6 +4,7 @@ const formatDuplicateError = (err) => {
   if (err.code === 11000) {
     const field = Object.keys(err.keyPattern || {})[0];
     if (field === 'license_no') return 'License number already exists — each driver must have a unique license.';
+    if (field === 'email') return 'Email address already exists — each driver must have a unique email.';
     return `Duplicate value for ${field}.`;
   }
   return null;
@@ -117,4 +118,53 @@ const updateDriverStatus = async (req, res) => {
   }
 };
 
-module.exports = { getDrivers, getAvailableDrivers, getDriver, createDriver, updateDriver, deleteDriver, updateDriverStatus };
+// POST /api/drivers/trigger-reminders
+const triggerExpiryReminders = async (req, res) => {
+  try {
+    const { sendExpiryReminder } = require('../utils/mailer');
+    const drivers = await Driver.find({});
+    const now = new Date();
+    const sentReminders = [];
+
+    for (const driver of drivers) {
+      if (!driver.email) continue;
+      const expiry = new Date(driver.license_expiry);
+      const daysLeft = Math.ceil((expiry - now) / (1000 * 60 * 60 * 24));
+      
+      // Expiring within 30 days, or already expired (within last 7 days for warnings)
+      if (daysLeft > -7 && daysLeft <= 30) {
+        try {
+          const result = await sendExpiryReminder(driver, daysLeft);
+          sentReminders.push({
+            name: driver.name,
+            email: driver.email,
+            daysLeft,
+            messageId: result.messageId,
+            previewUrl: result.previewUrl
+          });
+        } catch (mailErr) {
+          console.error(`Failed to send mail to ${driver.email}:`, mailErr);
+        }
+      }
+    }
+
+    res.json({
+      message: `Checked ${drivers.length} drivers. Sent ${sentReminders.length} reminder(s).`,
+      reminders: sentReminders
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Failed to trigger expiry reminders.' });
+  }
+};
+
+module.exports = {
+  getDrivers,
+  getAvailableDrivers,
+  getDriver,
+  createDriver,
+  updateDriver,
+  deleteDriver,
+  updateDriverStatus,
+  triggerExpiryReminders
+};
