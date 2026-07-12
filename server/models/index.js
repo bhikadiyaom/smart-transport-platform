@@ -21,8 +21,8 @@ const vehicleSchema = new Schema({
   name_model: { type: String, required: true },
   type: { type: String, enum: ['van', 'truck', 'mini'], required: true },
   max_capacity_kg: { type: Number, required: true, min: 1 },
-  odometer: { type: Number, default: 0, min: 0 },
-  acquisition_cost: { type: Number, default: 0 },
+  odometer: { type: Number, required: true, min: 0 },
+  acquisition_cost: { type: Number, required: true, min: 1 },
   status: {
     type: String,
     enum: ['available', 'on_trip', 'in_shop', 'retired'],
@@ -33,10 +33,11 @@ const vehicleSchema = new Schema({
 // ─── Driver ──────────────────────────────────────────────────────────────────
 const driverSchema = new Schema({
   name: { type: String, required: true },
+  email: { type: String, unique: true, required: true, trim: true, lowercase: true },
   license_no: { type: String, unique: true, required: true, trim: true, uppercase: true },
-  license_category: { type: String, default: 'B' },
+  license_category: { type: String, default: 'B', required: true },
   license_expiry: { type: Date, required: true },
-  contact: { type: String },
+  contact: { type: String, required: true },
   safety_score: { type: Number, default: 100, min: 0, max: 100 },
   trip_completion_pct: { type: Number, default: 100, min: 0, max: 100 },
   status: {
